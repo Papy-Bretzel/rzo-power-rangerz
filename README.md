@@ -29,7 +29,9 @@ Cette fonctionnalité est documentée sur le site de Metasploit :
 
 > On port 21, Metasploitable2 runs vsftpd, a popular FTP server. This particular version contains a backdoor that was slipped into the source code by an unknown intruder. The backdoor was quickly identified and removed, but not before quite a few people downloaded it. If a username is sent that ends in the sequence :) [ a happy face ], the backdoored version will open a listening shell on port 6200. We can demonstrate this with telnet or use the Metasploit Framework module to automatically exploit it.
 
-
+On utilise un plugin metasploit pour exploiter cette vulnérabilité :
+![img](./metasploitable_exploit_ftp_1.PNG)
+![img](./metasploitable_exploit_ftp_2.PNG)
 
 ## Audit - Windows (XP)
 Ou la version la plus trouée de tous les temps, indétrônée depuis la fin de son support en avril 2014.
@@ -40,17 +42,39 @@ Ou la version la plus trouée de tous les temps, indétrônée depuis la fin de 
 > Quel merveilleux métier pourriez-vous exercer à l'issue de votre cursus ingésup ? (Indice: bestial)
 
 ### Périmètre
-* Serveur local disponible à `192.168.1.1`
+* Serveur web disponible à `192.168.1.1`
 * `www.ynov.com`
 * `extranet.ynov.com` (nécessite authentification)
 
-### NMAP
-![img](./http1.1-nmap.png)
-Grace au retour de la commande `nmap` on voit que le port 22 est ouvert, on peut donc tenter de "bruteforce" le mot de passe d'un utilisateur
+### Découverte
+Notre cible est un serveur web, on essaye donc de s'y rendre, et nous retrouvons face à :
+* une redirection systématique vers une connexion HTTPS
+* une authentification basique.
 
-### SSH - command : hydra
+On regarde si d'autres services écoutent sur ce serveur à l'aide de `nmap`
+![img](./http1.1-nmap.png)
+
+On remarque que le port 22 est ouvert, on peut donc tenter de "bruteforce" le mot de passe d'un utilisateur avec des outils appropriés comme `hydra`
+
+### SSH & `hydra`
 `hydra` est un outil de bruteforce par dictionnaire, nottament à distance au travers de différents protocoles (ici SSH).
 On teste d'abord avec le nom de la société en user, soit : `ynov`
 ![img](./metasexploit-ssh-hydra.png)
 
-On a donc trouvé le couple identifiant / mot de passe du site : `ynov` / `123456`
+On a donc trouvé le couple identifiant / mot de passe d'un utilisateur système : `ynov` / `123456`
+On les utilise pour ouvrir une session SSH.
+
+### HTTPS et `openssl`
+
+Une fois l'accès SSH obtenu, on peut faire quelques recherches sur la version du serveur web (`apache2`) et de la librairie de chiffrement utilisée (`openssl`)
+![img](./version_openssl.PNG)
+Après quelques recherches, cette version est répertoriée comme vulnérable à la faille "HeartBleed", et peut être exploitée à l'aide d'un pluggin `metasploit`. Cette faille implique des corruptions de la mémoire permettant de récupérer le contenu de la RAM, afin d'y trouver des informations intéressantes.
+On lance donc l'attaque avec `metasploit`
+![img](./HeartBleed.PNG)
+
+Sur le screenshot précédent, on voit un header d'autorisation HTTP avec une valeur en base 64. Une fois décodé, on trouve la valeur suivante :
+![img](./pass.PNG)
+
+On utilise ce couple identifiant mot de passe pour passer l'authentification basique du site HTTP.
+On arrive vers un réplicat du site YNOV, dans lequel, en fouillant un peu, on tombe sur la réponse au challenge posé :
+![img](./reponse_challenge.PNG)
