@@ -49,7 +49,7 @@ On utilise un plugin metasploit pour exploiter cette vulnérabilité :
 Pour mener à bien les attaques sur cette machine Windows XP, on utilise le framework `metasploit` avec quelques plugins adaptés :
 
 ![img](./exploit_failed_fck.PNG)
-![img](./screen_windaube_exploit_failed.PNG)
+<!-- ![img](./screen_windaube_exploit_failed.PNG) -->
 ![img](./windaube_use_exploit.PNG)
 
 Cependant, aucune de nos tentatives n'a été fructueuse.
