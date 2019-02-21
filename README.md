@@ -1,2 +1,2 @@
 # rzo-power-rangerz
-Projet Réseau M1 - Team Bleue
+Projet Réseau M1 - Team Verte
